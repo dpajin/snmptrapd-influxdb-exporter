@@ -1,0 +1,16 @@
+snmptrapd-influxdb-export:
+  image: dpajin/snmptrapd-influxdb-exporter
+  container_name: snmptrapd-influxdb-exporter
+  environment:
+   - "NOT_NEEDED=True"
+  ports:
+   - "162:162/udp"
+  volumes:
+   - /etc/localtime:/etc/localtime
+   # volume for hosts files if you need to locally resolve names for trap source addresses
+   - /etc/hosts:/etc/hosts
+   - ./netsnmp-conf/snmp.conf:/etc/snmp/snmp.conf
+   - ./netsnmp-conf/snmptrapd.conf:/etc/snmp/snmptrapd.conf
+   - ./mibs:/usr/share/mibs
+   - ./snmptrapd-influxdb-exporter.py:/snmptrapd-influxdb-exporter.py
+   - ./config.yaml:/config.yaml

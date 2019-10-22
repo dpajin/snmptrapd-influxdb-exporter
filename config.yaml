@@ -1,0 +1,42 @@
+---
+# logging
+logging: debug
+
+  # Influx DB configuration
+influxdb:
+  server:
+    - name: local
+      ip: 172.17.0.1
+      port: 8086
+      db: snmptraps
+      user: juniper 
+      pass: juniper
+
+# All traps processing configuration
+all:
+  measurement: snmptraps
+  tags:
+    host_dns: host_name
+    host_ip: host_ip
+    oid: oid
+
+# Special processing based on OID
+mappings:
+  IF-MIB::linkUp:
+    measurement: link
+    tags:
+      - snmpTrapOID
+      - ifIndex
+      - ifName
+    fields:
+      - ifAdminStatus
+      - ifOperStatus
+  IF-MIB::linkDown:
+    measurement: link
+    tags:
+      - snmpTrapOID
+      - ifIndex
+      - ifName
+    fields:
+      - ifAdminStatus
+      - ifOperStatus
