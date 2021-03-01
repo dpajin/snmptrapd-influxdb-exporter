@@ -1,5 +1,5 @@
 snmptrapd-influxdb-export:
-  image: dpajin/snmptrapd-influxdb-exporter
+  image: audiocomp/snmptrapd-influxdb-exporter
   container_name: snmptrapd-influxdb-exporter
   environment:
    - "NOT_NEEDED=True"

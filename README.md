@@ -7,7 +7,7 @@ This is SNMP Trap collector based on *net-snmp* package *snmptrapd*, which then 
 #### clone the repo
 Clone the repo and make mibs directory
 ```
-git clone https://github.com/dpajin/snmptrapd-influxdb-exporter.git
+git clone https://github.com/audiocomp/snmptrapd-influxdb-exporter.git
 cd snmptrapd-influxdb-exporter
 mkdir mibs
 ```
@@ -58,11 +58,10 @@ There can be more than one server configured.
 influxdb:
   server:
     - name: local
-      ip: 172.17.0.1
-      port: 8086
-      db: juniper
-      user: juniper
-      pass: juniper
+      url: http://172.17.0.2:8086
+      org: snmptraps
+      token: influx-snmptraps
+      bucket: snmptraps
 ```
 
 
@@ -90,8 +89,8 @@ all:
 Example output from the database:
 ```
 root@bb314482a0b3:/# influx
-Connected to http://localhost:8086 version 1.5.1
-InfluxDB shell version: 1.5.1
+Connected to http://localhost:8086 version 2.0.4
+InfluxDB shell version: 2.0.4
 > use snmptraps;
 Using database snmptraps
 > SELECT host_name, host_ip, oid, varbinds FROM "snmptraps".."snmptraps" WHERE time > now() - 7d order by time desc limit 10
@@ -157,8 +156,8 @@ Adding MIBs and changing net-snmp configuration requires container restart. Chan
 To re/start the containter:
 ```
 # docker-compose up -d
-Pulling snmptrapd-influxdb-export (dpajin/snmptrapd-influxdb-exporter:)...
-latest: Pulling from dpajin/snmptrapd-influxdb-exporter
+Pulling snmptrapd-influxdb-export (audiocomp/snmptrapd-influxdb-exporter:)...
+latest: Pulling from audiocomp/snmptrapd-influxdb-exporter
 9d48c3bd43c5: Pull complete
 c0ea575d71b9: Pull complete
 0f535eceebd5: Pull complete
@@ -179,7 +178,7 @@ Check if the container is running
 ```
 # docker ps
 CONTAINER ID        IMAGE                                    COMMAND                  CREATED           STATUS          PORTS                              NAMES
-631668ddc189        dpajin/snmptrapd-influxdb-exporter       "snmptrapd -m ALL -f"    5 seconds ago     Up 4 seconds    162/tcp, 0.0.0.0:162->162/udp      snmptrapd-influxdb-exporter
+631668ddc189        audiocomp/snmptrapd-influxdb-exporter       "snmptrapd -m ALL -f"    5 seconds ago     Up 4 seconds    162/tcp, 0.0.0.0:162->162/udp      snmptrapd-influxdb-exporter
 ```
 
 Container listens on the UDP port 162 for SNMP Traps. 

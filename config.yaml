@@ -6,11 +6,10 @@ logging: debug
 influxdb:
   server:
     - name: local
-      ip: 172.17.0.1
-      port: 8086
-      db: snmptraps
-      user: juniper 
-      pass: juniper
+      url: http://172.18.0.2:8086
+      org: snmptraps
+      token: influx-snmptraps
+      bucket: snmptraps
 
 # All traps processing configuration
 all:

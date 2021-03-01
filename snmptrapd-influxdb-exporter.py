@@ -4,7 +4,8 @@ import logging
 import logging.handlers
 import yaml
 import copy
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 def get_all_traps_influx_datapoint(config, trap):
     varbinds = ", ".join(trap['varbinds'])
@@ -31,12 +32,6 @@ f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message
 syslog_handler = logging.handlers.SysLogHandler()
 syslog_handler.setFormatter(f_format)
 logger.addHandler(syslog_handler)
-
-#f_handler = logging.FileHandler('/var/log/snmptrapd-influxdb-exporter.log')
-#f_handler.setLevel(logging.DEBUG)
-#f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-#f_handler.setFormatter(f_format)
-#logger.addHandler(f_handler)
 
 out_handler = logging.StreamHandler(sys.stdout)
 out_handler.setFormatter(f_format)
@@ -142,9 +137,10 @@ else:
 if datapoints != [] and config.get('influxdb', None) is not None:
     dbclients = []
     for server in config['influxdb'].get('server', []):
-        dbclient = InfluxDBClient(host=server['ip'], port=server['port'], username=server['user'], password=server['pass'], database=server['db'])
+        dbclient = (InfluxDBClient(url=server['url'], token=server['token'], org=server['org']), server['bucket'])
         dbclients.append(dbclient)
     if dbclients != []:
-        for dbclient in dbclients:
-            dbclient.write_points(datapoints)
+        for dbclient, bucket in dbclients:
+            write_api = dbclient.write_api(write_options=SYNCHRONOUS)
+            write_api.write(bucket=bucket, record=datapoints)
 

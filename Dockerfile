@@ -1,11 +1,11 @@
-FROM python:3.7.4-alpine3.10
+FROM python:3.9-alpine3.13
 
-LABEL maintainer="dusan.pajin@gmail.com"
+LABEL maintainer="steve@audiocomp.co.uk"
 
 ADD snmptrapd-influxdb-exporter.py /
 ADD config.yaml /
 
-RUN pip install influxdb PyYAML
+RUN pip install influxdb-client PyYAML
 RUN apk --no-cache add net-snmp
 
 # add net-snmp configuration
