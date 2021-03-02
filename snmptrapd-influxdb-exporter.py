@@ -7,17 +7,18 @@ import copy
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
+
 def get_all_traps_influx_datapoint(config, trap):
     varbinds = ", ".join(trap['varbinds'])
     datapoint = {
-        "measurement" : config['all']['measurement'],
+        "measurement": config['all']['measurement'],
         "tags": {
             config['all']['tags'].get('host_dns', 'host_dns'): trap['host_dns'],
             config['all']['tags'].get('host_ip', 'host_ip'): trap['host_ip'],
             config['all']['tags'].get('oid', 'oid'): trap['oid']
         },
-        "fields" : {
-            "varbinds" : varbinds
+        "fields": {
+            "varbinds": varbinds
         }
     }
     return datapoint
@@ -41,7 +42,7 @@ logger.addHandler(out_handler)
 config_file = open('./config.yaml', 'r')
 config = yaml.load(config_file, yaml.SafeLoader)
 
-# adjust logging level from the config file 
+# adjust logging level from the config file
 numeric_level = getattr(logging, config.get("logging", "DEBUG").upper(), 10)
 logger.setLevel(numeric_level)
 
@@ -77,7 +78,8 @@ for line in lines[2:]:
             continue
     trap['varbinds'].append(line.strip().replace(" ", "="))
     varbind = line.strip().split(" ", 1)
-    trap['varbinds_dict'][varbind[0]] = varbind[1]
+    if len(varbind) > 1:
+        trap['varbinds_dict'][varbind[0]] = varbind[1]
     logger.debug(line.strip())
 
 logger.info("received trap: %s" % str(trap))
@@ -116,16 +118,16 @@ if cfg_mappings is not None:
         oid_datapoint = {}
         oid_datapoint['measurement'] = mapping['measurement']
         oid_datapoint['tags'] = {}
-        oid_datapoint['tags'].update({ config['all']['tags'].get('host_dns', 'host_dns'): trap['host_dns'] })
-        oid_datapoint['tags'].update({ config['all']['tags'].get('host_ip', 'host_ip'): trap['host_ip'] })
+        oid_datapoint['tags'].update({config['all']['tags'].get('host_dns', 'host_dns'): trap['host_dns']})
+        oid_datapoint['tags'].update({config['all']['tags'].get('host_ip', 'host_ip'): trap['host_ip']})
         oid_datapoint['fields'] = {}
         for varbind in trap['varbinds_dict'].keys():
             for element in mapping['tags']:
                 if element in varbind:
-                    oid_datapoint['tags'].update({ element : trap['varbinds_dict'][varbind] })
+                    oid_datapoint['tags'].update({element: trap['varbinds_dict'][varbind]})
             for element in mapping['fields']:
                 if element in varbind:
-                    oid_datapoint['fields'].update({ element: trap['varbinds_dict'][varbind] })
+                    oid_datapoint['fields'].update({element: trap['varbinds_dict'][varbind]})
         logger.debug("add oid_datapoint %s" % (oid_datapoint))
         datapoints.append(copy.deepcopy(oid_datapoint))
     else:
@@ -137,10 +139,10 @@ else:
 if datapoints != [] and config.get('influxdb', None) is not None:
     dbclients = []
     for server in config['influxdb'].get('server', []):
-        dbclient = (InfluxDBClient(url=server['url'], token=server['token'], org=server['org']), server['bucket'])
+        dbclient = (InfluxDBClient(url=server['url'], token=server['token'],
+                    org=server['org']), server['bucket'])
         dbclients.append(dbclient)
     if dbclients != []:
         for dbclient, bucket in dbclients:
             write_api = dbclient.write_api(write_options=SYNCHRONOUS)
             write_api.write(bucket=bucket, record=datapoints)
-
