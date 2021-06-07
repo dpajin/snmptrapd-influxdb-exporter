@@ -1,6 +1,6 @@
 FROM python:3.9-alpine3.13
 
-LABEL maintainer="steve@audiocomp.co.uk"
+LABEL maintainer="Steve Brown https://github.com/audiocomp"
 
 ADD snmptrapd-influxdb-exporter.py /
 ADD config.yaml /

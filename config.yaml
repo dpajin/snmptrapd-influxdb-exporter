@@ -1,6 +1,6 @@
 ---
 # logging
-logging: debug
+logging: ERROR
 
 # InfluxDB v2.x configuration
 influxdb:

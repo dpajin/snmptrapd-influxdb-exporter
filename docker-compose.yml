@@ -1,16 +1,46 @@
-snmptrapd-influxdb-export:
-  image: audiocomp/snmptrapd-influxdb-exporter
-  container_name: snmptrapd-influxdb-exporter
-  environment:
-   - "NOT_NEEDED=True"
-  ports:
-   - "162:162/udp"
-  volumes:
-   - /etc/localtime:/etc/localtime
-   # volume for hosts files if you need to locally resolve names for trap source addresses
-   - /etc/hosts:/etc/hosts
-   - ./netsnmp-conf/snmp.conf:/etc/snmp/snmp.conf
-   - ./netsnmp-conf/snmptrapd.conf:/etc/snmp/snmptrapd.conf
-   - ./mibs:/usr/share/mibs
-   - ./snmptrapd-influxdb-exporter.py:/snmptrapd-influxdb-exporter.py
-   - ./config.yaml:/config.yaml
+version: '3'
+services:
+  snmptrapd-influxdb-export:
+    image: audiocomp/snmptrapd-influxdb-exporter
+    container_name: snmptrapd-influxdb-exporter
+    environment:
+    - "NOT_NEEDED=True"
+    ports:
+    - "162:162/udp"
+    volumes:
+    - /etc/localtime:/etc/localtime
+    # volume for hosts files if you need to locally resolve names for trap source addresses
+    - /etc/hosts:/etc/hosts
+    - ./netsnmp-conf/snmp.conf:/etc/snmp/snmp.conf
+    - ./netsnmp-conf/snmptrapd.conf:/etc/snmp/snmptrapd.conf
+    - ./mibs:/usr/share/mibs
+    - ./snmptrapd-influxdb-exporter.py:/snmptrapd-influxdb-exporter.py
+    - ./config.yaml:/config.yaml  
+  influxdb:
+    image: quay.io/influxdb/influxdb:v2.0.4
+    container_name: snmptrapd-influxdb
+    volumes:
+      # Mount for influxdb data directory and configuration
+      - ./influxdb/influxdbv2:/root/.influxdbv2
+      - ./influxdb/config.yml:/etc/influxdb2/config.yml
+    ports:
+      - "8086:8086"
+  # Use the influx cli to set up an influxdb instance.
+  influxdb_cli:
+    links:
+      - influxdb
+    image: quay.io/influxdb/influxdb:v2.0.4
+    container_name: snmptrapd-influxdb-cli
+    # Update to something secure, then use these same configurations parameters in your snmptrapd-influxdb-exporter config.yaml
+    entrypoint: influx setup --bucket snmptraps -t influx-snmptraps -o snmptraps --username=influxdb --password=influxdb --host=http://influxdb:8086 -f
+    # Wait for the influxd service in the influxdb container has fully bootstrapped before trying to setup an influxdb instance with the influxdb_cli service.
+    restart: on-failure:10
+    depends_on:
+      - influxdb
+volumes:
+  influxdbv2:
+
+
+
+
+

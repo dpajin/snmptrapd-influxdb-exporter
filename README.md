@@ -42,7 +42,7 @@ The first line defines what will be the action for the community used. The defau
 authCommunity execute community
 ```
 
-If the system is to be used to process SNMPv3 Traps or Informs, that should be configured in this file as well. Please consult *net-snmp* and *snmptrapd* documentation on how to configure SNMPv3 traps and SNMPv2 / v3 Informs. 
+If the system is to be used to process SNMPv3 Traps or Informs, that should be configured in this file as well. There are some Commented Samples in the config file. Please consult *net-snmp* and *snmptrapd* documentation on how to configure SNMPv3 traps and Informs. 
 
 The second line defines how  received SNMP Traps will be handled. This line specifies that the Python script   `snmptrapd-influxdb-exporter.py`, located in the `/` directory will be executed for each SNMP Trap.
 
@@ -54,7 +54,7 @@ The configuration file has the following sections:
 
 `Tune logging level:`
 ```
-logging: debug
+logging: ERROR
 ```
 
 `Configure destination InfluxDB servers:`
@@ -168,7 +168,7 @@ time                host_ip  host_name ifAdminStatus ifIndex ifName   ifOperStat
 ```
 
 ### 5. Run container usind docker-compose
-Using docker-compose is the easiest way to run the container. The docker-compose files creates volumes for sharing the local files with the container.
+Using docker-compose is the easiest way to run the container. The docker-compose files creates volumes for sharing the local files with the container. The sample provided includes an associated influxdB container.
 In this way the container image does not need to be rebuilt every time the configuration is updated?:
 Adding MIBs and changing net-snmp configuration requires a container restart. 
 A Change of the script configuration file will be effective immediately.
