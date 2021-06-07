@@ -57,6 +57,8 @@ The configuration file has the following sections:
 logging: ERROR
 ```
 
+Change to DEBUG to aid Error Handling
+
 `Configure destination InfluxDB servers:`
 Change the InfluxDB server IP address and tune the database access parameters. The configured bucket should already exist on the InfluxDB server. There can be more than one server configured.
 ```
