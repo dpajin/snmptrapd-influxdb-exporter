@@ -15,7 +15,7 @@ COPY netsnmp-conf/snmptrapd.conf /etc/snmp/snmptrapd.conf
 #add MIBs
 COPY mibs/ /usr/share/mibs/
 
-EXPOSE 162
+EXPOSE 162/udp
 
 CMD ["snmptrapd","-m","ALL","-f"]
 
