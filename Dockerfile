@@ -3,7 +3,7 @@ LABEL maintainer="Steve Brown https://github.com/audiocomp"
 
 # Install Required Packages
 COPY requirements.txt  /tmp/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Add Code & Config
 COPY ./mibs /mibs
