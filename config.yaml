@@ -1,26 +1,25 @@
----
-# logging
+# Log Level
 logging: ERROR
 
-# InfluxDB v2.x configuration
+# Influx DB configuration
 influxdb:
   server:
     - name: local
-      url: http://172.18.0.2:8086
-      org: snmptraps
-      token: influx-snmptraps
-      bucket: snmptraps
+      url: https://127.0.0.1:8086
+      org: org
+      token: token
+      bucket: bucket
 
-# Default Processing
-all:
+# All traps process configuration
+default_mapping:
   measurement: snmptraps
   tags:
     host_dns: host_name
     host_ip: host_ip
     oid: oid
 
-# Custom processing based on OID
-mappings:
+# Custom traps process configuration
+custom_mappings:
   IF-MIB::linkUp:
     measurement: link
     tags:
@@ -39,3 +38,20 @@ mappings:
     fields:
       - ifAdminStatus
       - ifOperStatus
+# Mibs
+mib_list: ['SNMPv2-MIB']
+
+# SNMPv2
+snmpv2:
+  - community: public
+    description: default
+
+# SNMPv3
+snmpv3:
+  engine_id: 800009e5604083371bc6d10a42
+  users:
+    - user: usr-md5-aes128
+      auth_protocol: md5
+      auth_key: authkey1
+      priv_protocol: aes128
+      priv_key: privkey1

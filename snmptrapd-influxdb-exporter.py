@@ -1,148 +1,134 @@
-#!/usr/bin/python
-import sys
-import logging
-import logging.handlers
-import yaml
-import copy
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import SYNCHRONOUS
+import asyncio
+from pysnmp.entity import engine, config
+from pysnmp.carrier.asyncio.dgram import udp
+from pysnmp.entity.rfc3413 import ntfrcv
+from pysnmp.proto.api import v2c
+from pysnmp.smi import rfc1902
+
+from modules.load_config import log, snmp_config
+from modules.load_mibs import mibViewController
+from modules.datapoints import build_datapoints
 
 
-def get_all_traps_influx_datapoint(config, trap):
-    varbinds = ", ".join(trap['varbinds'])
-    datapoint = {
-        "measurement": config['all']['measurement'],
-        "tags": {
-            config['all']['tags'].get('host_dns', 'host_dns'): trap['host_dns'],
-            config['all']['tags'].get('host_ip', 'host_ip'): trap['host_ip'],
-            config['all']['tags'].get('oid', 'oid'): trap['oid']
-        },
-        "fields": {
-            "varbinds": varbinds
-        }
-    }
-    return datapoint
+def snmp_engine():
+    # Create SNMP engine with autogenernated engineID and pre-bound
+    # to socket transport dispatcher
+    snmpEngine = engine.SnmpEngine(
+        snmpEngineID=v2c.OctetString(
+            hexValue=snmp_config.snmpv3.engine_id
+        )
+    )
 
+    # Transport setup
+    # UDP over IPv4, first listening interface/port
+    config.addTransport(
+        snmpEngine,
+        udp.domainName + (1,),
+        udp.UdpTransport().openServerMode(("0.0.0.0", 162)),
+    )
 
-# logging part
-logger = logging.getLogger("snmptrapd-influxdb-exporter")
-logger.setLevel(logging.DEBUG)
+    # SNMPv1/2c setup
+    # SecurityName <-> CommunityName mapping
+    if snmp_config.snmpv2 is not None:
+        for entry in snmp_config.snmpv2:
+            config.addV1System(
+                snmpEngine,
+                entry.description,
+                entry.community
+                )
 
-f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # SNMP v3 setup
+    if snmp_config.snmpv3.users is not None:
+        authProtocol = {
+            'usmHMACMD5AuthProtocol': config.usmHMACMD5AuthProtocol,
+            'usmHMACSHAAuthProtocol': config.usmHMACSHAAuthProtocol,
+            'usmAesCfb128Protocol': config.usmAesCfb128Protocol,
+            'usmAesCfb256Protocol': config.usmAesCfb256Protocol,
+            'usmAesCfb192Protocol': config.usmAesCfb192Protocol,
+            'usmDESPrivProtocol': config.usmDESPrivProtocol,
+            'usmNoAuthProtocol': config.usmNoAuthProtocol,
+            'usmNoPrivProtocol': config.usmNoPrivProtocol
+         }
 
-syslog_handler = logging.handlers.SysLogHandler()
-syslog_handler.setFormatter(f_format)
-logger.addHandler(syslog_handler)
+        for user in snmp_config.snmpv3.users:
+            if user.engine_id is not None:
+                user.engine_id = v2c.OctetString(
+                    hexValue=user.engine_id)
+            config.addV3User(
+                snmpEngine,
+                userName=user.user,
+                authKey=user.auth_key,
+                privKey=user.priv_key,
+                authProtocol=authProtocol.get(
+                    user.auth_protocol.name,
+                    config.usmNoAuthProtocol
+                    ),
+                privProtocol=authProtocol.get(
+                    user.priv_protocol.name,
+                    config.usmNoPrivProtocol
+                    ),
+                securityEngineId=user.engine_id
+                )
 
-out_handler = logging.StreamHandler(sys.stdout)
-out_handler.setFormatter(f_format)
-logger.addHandler(out_handler)
-
-# Read config file
-config_file = open('./config.yaml', 'r')
-config = yaml.load(config_file, yaml.SafeLoader)
-
-# adjust logging level from the config file
-numeric_level = getattr(logging, config.get("logging", "DEBUG").upper(), 10)
-logger.setLevel(numeric_level)
-
-logger.info("config: %s" % str(config))
-
-lines = sys.stdin.readlines()
-
-# Parsing input from snmptrapd
-# parsing DNS name and IP
-trap = {}
-trap['host_dns'] = lines[0].strip()
-socket = lines[1]
-trap['host_ip'] = socket[socket.find('[') + 1:socket.find(']')]
-logger.debug("host_dns: %s" % str(trap['host_dns']))
-logger.debug("host_ip: %s" % str(trap['host_ip']))
-
-# parsing SNMP stuff
-trap['oid'] = None
-trap['sysuptime'] = None
-trap['varbinds'] = []
-trap['varbinds_dict'] = {}
-for line in lines[2:]:
-    if trap['sysuptime'] is None:
-        if "sysUpTime" in line:
-            trap['sysuptime'] = line.split(" ")[1].strip()
-            continue
-    if trap['oid'] is None:
-        if "snmpTrapOID" in line:
-            varbind = line.strip().split(" ", 1)
-            trap['varbinds_dict'][varbind[0]] = varbind[1]
-            trap['oid'] = varbind[1].strip()
-            logger.debug("OID: %s" % trap['oid'])
-            continue
-    trap['varbinds'].append(line.strip().replace(" ", "="))
-    varbind = line.strip().split(" ", 1)
-    if len(varbind) > 1:
-        trap['varbinds_dict'][varbind[0]] = varbind[1]
-    logger.debug(line.strip())
-
-logger.info("received trap: %s" % str(trap))
-
-# preparing data for influxdb
-# putting combined mesrsage into the one measurement for all taps
-datapoints = []
-if config.get('all', None) is not None:
-    if config['all'].get('measurement', None) is not None:
-        if config['all'].get('permit', None) is not None:
-            for rule in config['all']['permit']:
-                if rule in trap['oid']:
-                    logger.debug("permit rule %s matching oid %s" % (rule, trap['oid']))
-                    datapoints.append(get_all_traps_influx_datapoint(config, trap))
-        elif config['all'].get('deny', None) is not None:
-            for rule in config['all']['deny']:
-                if rule in trap['oid']:
-                    logger.debug("deny rule %s matching oid %s" % (rule, trap['oid']))
-                    break
+    # Callback function for receiving notifications
+    def cbFun(
+            snmpEngine,
+            stateReference,
+            contextEngineId,
+            contextName,
+            varBinds,
+            cbCtx):
+        _, tAddress = snmpEngine.msgAndPduDsp.getTransportInfo(
+            stateReference
+        )
+        message = {}
+        message['host_dns'] = tAddress[0].strip()
+        message['host_ip'] = tAddress[0].strip()
+        message['oid'] = None
+        message['sysuptime'] = None
+        message['varbinds'] = []
+        message['varbinds_dict'] = {}
+        for oid, val in varBinds:
+            varBind = str(
+                rfc1902.ObjectType(
+                    rfc1902.ObjectIdentity(oid), val).resolveWithMib(
+                    mibViewController
+                    )
+                )
+            if 'sysUpTime' in varBind:
+                message['uptime'] = varBind.split('=')[1].strip()
+            elif 'snmpTrapOID' in varBind:
+                if message['oid'] is None:
+                    message['oid'] = varBind.split('=')[1].strip()
             else:
-                # if deny rule is not match
-                datapoints.append(get_all_traps_influx_datapoint(config, trap))
-        else:
-            # no permit or deny rules, so permit everything
-            datapoints.append(get_all_traps_influx_datapoint(config, trap))
-    else:
-        logger.warning("configuration file missing 'all/measurement' part")
-else:
-    logger.warning("configuration file missing 'all' part")
+                message['varbinds'].append(
+                    varBind.replace(' =', '=').replace('= ', '='))
+                if len(varBind.split('=')) > 1:
+                    message['varbinds_dict'][varBind.split('=')[0].strip()]\
+                        = varBind.split('=')[1].strip()
+        log.info(
+            f'Trap From: {tAddress}, EngineId {contextEngineId.prettyPrint()}'
+        )
+        log.debug(f'Context Name: {contextName}, cbCtx: {cbCtx}')
+        log.debug(f'Trap Detail: {message}')
+        asyncio.create_task(build_datapoints(message))
 
-# processing for each type of traps according to the mappings configuration
-cfg_mappings = config.get('mappings', None)
-if cfg_mappings is not None:
-    mapping = cfg_mappings.get(trap['oid'], None)
-    if mapping is not None:
-        oid_datapoint = {}
-        oid_datapoint['measurement'] = mapping['measurement']
-        oid_datapoint['tags'] = {}
-        oid_datapoint['tags'].update({config['all']['tags'].get('host_dns', 'host_dns'): trap['host_dns']})
-        oid_datapoint['tags'].update({config['all']['tags'].get('host_ip', 'host_ip'): trap['host_ip']})
-        oid_datapoint['fields'] = {}
-        for varbind in trap['varbinds_dict'].keys():
-            for element in mapping['tags']:
-                if element in varbind:
-                    oid_datapoint['tags'].update({element: trap['varbinds_dict'][varbind]})
-            for element in mapping['fields']:
-                if element in varbind:
-                    oid_datapoint['fields'].update({element: trap['varbinds_dict'][varbind]})
-        logger.debug("add oid_datapoint %s" % (oid_datapoint))
-        datapoints.append(copy.deepcopy(oid_datapoint))
-    else:
-        logger.debug("configuraton no mappings for trap %s" % (trap['oid']))
-else:
-    logger.info("configuration file missing 'mappings' part")
+    # Register SNMP Application at the SNMP engine
+    ntfrcv.NotificationReceiver(snmpEngine, cbFun)
+    snmpEngine.transportDispatcher.jobStarted(1)
+    try:
+        log.error('Trap Receiver started on port 162. Press Ctrl-c to quit.')
+        snmpEngine.transportDispatcher.runDispatcher()
+    except KeyboardInterrupt:
+        log.error('Ctrl-c Pressed. Trap Receiver Stopped')
+    finally:
+        snmpEngine.transportDispatcher.closeDispatcher()
+    ntfrcv.NotificationReceiver(snmpEngine, cbFun)
 
-# export to influxdb
-if datapoints != [] and config.get('influxdb', None) is not None:
-    dbclients = []
-    for server in config['influxdb'].get('server', []):
-        dbclient = (InfluxDBClient(url=server['url'], token=server['token'],
-                    org=server['org']), server['bucket'])
-        dbclients.append(dbclient)
-    if dbclients != []:
-        for dbclient, bucket in dbclients:
-            write_api = dbclient.write_api(write_options=SYNCHRONOUS)
-            write_api.write(bucket=bucket, record=datapoints)
+
+def main():
+    snmp_engine()
+
+
+if __name__ == "__main__":
+    main()
