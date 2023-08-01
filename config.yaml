@@ -5,10 +5,10 @@ logging: ERROR
 influxdb:
   server:
     - name: local
-      url: https://127.0.0.1:8086
-      org: org
-      token: token
-      bucket: bucket
+      url: http://127.0.0.1:8086
+      org: snmptraps
+      token:  influx-snmptraps
+      bucket: snmptraps
 
 # All traps process configuration
 default_mapping:

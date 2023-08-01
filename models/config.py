@@ -46,8 +46,8 @@ class Tags(BaseModel):
 class DefaultMapping(BaseModel):
     measurement: str
     tags: Tags
-    permit: Optional[List[str]]
-    deny: Optional[List[str]]
+    permit: Optional[List[str]] = None
+    deny: Optional[List[str]] = None
 
 
 class CustomMapping(BaseModel):
@@ -59,10 +59,10 @@ class CustomMapping(BaseModel):
 class User(BaseModel):
     user: str
     auth_protocol: AuthProtocol
-    auth_key: Optional[str]
+    auth_key: Optional[str] = None
     priv_protocol: PrivProtocol
-    priv_key: Optional[str]
-    engine_id: Optional[str]
+    priv_key: Optional[str] = None
+    engine_id: Optional[str] = None
 
 
 class SnmpV3(BaseModel):
