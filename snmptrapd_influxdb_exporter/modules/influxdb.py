@@ -23,7 +23,7 @@ async def write_datapoints(datapoints: List[Dict[str, Any]]):
                 client_session_type=RetryClient,
                 client_session_kwargs={"retry_options": retry_options},
             )
-            bucket = (server.bucket,)
+            bucket = server.bucket
             dbclients.append(dbclient)
             buckets.append(bucket)
         if dbclients != []:
