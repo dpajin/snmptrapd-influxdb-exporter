@@ -1,9 +1,9 @@
 import logging
 import sys
 from time import gmtime
+from typing import Optional
 
 import yaml  # type: ignore
-
 from models.config import Config
 
 FILENAME: str = "config.yaml"
@@ -20,7 +20,7 @@ log.addHandler(console_handler)
 log.setLevel(40)
 log.propagate = False
 
-snmp_config = None
+snmp_config: Optional[Config] = None
 try:
     with open(FILENAME, "r") as config_file:
         contents = config_file.read()
@@ -35,15 +35,16 @@ except (KeyError, ValueError):
     log.error("Unable to load config.yaml")
 if unvalidated_config is not None:
     try:
-        snmp_config: Config = Config(**unvalidated_config)
+        snmp_config = Config(**unvalidated_config)
     except ValueError as e:
         log.error(f"Config File Validation Failed: {e}")
 else:
     log.error("Unable to Validate Config File")
 
-log_level = snmp_config.logging
-if log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-    level = logging.getLevelName(log_level)
-    log.setLevel(log_level)
+if snmp_config is not None:
+    log_level = snmp_config.logging
+    if log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+        level = logging.getLevelName(log_level)
+        log.setLevel(log_level)
 
 log.debug(f"Processed snmp_conifg: {snmp_config}")

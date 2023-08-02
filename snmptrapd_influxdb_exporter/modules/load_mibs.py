@@ -1,10 +1,9 @@
 import os
 from typing import List
 
+from modules.load_config import log, snmp_config
 from pysnmp.smi import builder, compiler, view
 from pysnmp.smi.error import MibNotFoundError
-
-from modules.load_config import log, snmp_config
 
 mib_path: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "mibs"

@@ -55,3 +55,8 @@ snmpv3:
       auth_key: authkey1
       priv_protocol: aes128
       priv_key: privkey1
+    - user: usr-sha512-aes256
+      auth_protocol: sha512
+      auth_key: authkey2
+      priv_protocol: aes256
+      priv_key: privkey2

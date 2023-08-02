@@ -1,14 +1,13 @@
 import asyncio
 
+from modules.datapoints import build_datapoints
+from modules.load_config import log, snmp_config
+from modules.load_mibs import mibViewController
 from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import config, engine
 from pysnmp.entity.rfc3413 import ntfrcv
 from pysnmp.proto.api import v2c
 from pysnmp.smi import rfc1902
-
-from modules.datapoints import build_datapoints
-from modules.load_config import log, snmp_config
-from modules.load_mibs import mibViewController
 
 authProtocol = {
     "usmHMACMD5AuthProtocol": config.usmHMACMD5AuthProtocol,

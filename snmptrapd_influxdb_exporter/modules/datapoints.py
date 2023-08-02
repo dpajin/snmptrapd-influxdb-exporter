@@ -1,6 +1,7 @@
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any, Dict
 
+from models.config import CustomMapping
 from modules.influxdb import write_datapoints
 from modules.load_config import log, snmp_config
 
@@ -21,7 +22,7 @@ def default_mapping_datapoint(message: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def custom_mapping_datapoint(
-    message: Dict[str, Any], mapping: Dict[str, Any]
+    message: Dict[str, Any], mapping: CustomMapping
 ) -> Dict[str, Any]:
     oid_datapoint = {}
     oid_datapoint["measurement"] = mapping.measurement
@@ -48,7 +49,7 @@ def custom_mapping_datapoint(
     return oid_datapoint
 
 
-async def build_datapoints(message: Dict[str, Any]) -> List[Dict[str, Any]]:
+async def build_datapoints(message: Dict[str, Any]) -> None:
     # Build datapoints from Trap Message
     datapoints = []
     # Build Datapoints for default_mapping
@@ -81,3 +82,4 @@ async def build_datapoints(message: Dict[str, Any]) -> List[Dict[str, Any]]:
             datapoints.append(deepcopy(oid_datapoint))
 
     await write_datapoints(datapoints)
+    return None
