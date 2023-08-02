@@ -9,8 +9,8 @@ services:
     - "162:162/udp"
     volumes:
     - /etc/localtime:/etc/localtime
-    - ./mibs:/mibs
-    - ./config.yaml:/config.yaml  
+    - ./snmptrapd_influxdb_exporter/mibs:/mibs
+    - ./snmptrapd_influxdb_exporter/config.yaml:/config.yaml
   influxdb:
     image: quay.io/influxdb/influxdb:v2.0.4
     container_name: snmptrapd-influxdb
@@ -34,8 +34,3 @@ services:
       - influxdb
 volumes:
   influxdbv2:
-
-
-
-
-

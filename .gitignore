@@ -1,6 +1,3 @@
-# Ignore Credentials files
-config.yaml 
-
 #Ignore VS Code Workspace files
 *.code-workspace
 

@@ -1,0 +1,54 @@
+# .pre-commit-config.yaml
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0  # this is optional, use `pre-commit auto-update` to get the latest rev!
+    hooks:
+    -   id: check-json
+        exclude: ^site/
+    -   id: check-toml
+        exclude: ^site/
+    -   id: check-xml
+        exclude: ^site/
+    -   id: check-yaml
+        exclude: ^site/
+    -   id: detect-private-key
+    -   id: forbid-submodules
+    -   id: pretty-format-json
+        exclude: ^site/
+        args: ['--autofix']
+    -   id: check-added-large-files
+        args: ['--maxkb=500']
+    -   id: trailing-whitespace
+        exclude: ^.*\.cfg$|^.gitlab-ci.yml$|^site/
+    -   id: end-of-file-fixer
+        exclude: ^.*\.cfg$|^.gitlab-ci.yml$|^site/
+    -   id: mixed-line-ending
+        exclude: ^.*\.cfg$|^.gitlab-ci.yml$|^site/
+-   repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.16  # Use the ref you want to point at
+    hooks:
+    -   id: mdformat
+        exclude: ^site/
+        # Optionally add plugins
+        additional_dependencies:
+        - mdformat-gfm
+        - mdformat-black
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.1.1
+    hooks:
+    -   id: mypy
+        args: [--ignore-missing-imports, --check-untyped-defs]
+-   repo: https://github.com/timothycrosley/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+        args: ["--profile", "black", "-l", "79"]
+-   repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+    -   id: black
+        args: [--line-length=79]
+-   repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8

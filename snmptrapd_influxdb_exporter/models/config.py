@@ -1,6 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel
 from typing import Dict, List, Optional
+
+from pydantic import BaseModel
 
 
 class LogLevel(Enum):
@@ -14,6 +15,10 @@ class LogLevel(Enum):
 class AuthProtocol(Enum):
     usmHMACMD5AuthProtocol = "md5"
     usmHMACSHAAuthProtocol = "sha"
+    usmHMAC128SHA224AuthProtocol = "sha128"
+    usmHMAC192SHA256AuthProtocol = "sha192"
+    usmHMAC256SHA384AuthProtocol = "sha256"
+    usmHMAC384SHA512AuthProtocol = "sha512"
     usmNoAuthProtocol = "none"
 
 
@@ -22,6 +27,9 @@ class PrivProtocol(Enum):
     usmAesCfb192Protocol = "aes192"
     usmAesCfb256Protocol = "aes256"
     usmDESPrivProtocol = "des"
+    usm3DESEDEPrivProtocol = "3des"
+    usmAesBlumenthalCfb192Protocol = "aes192Blumenthal"
+    usmAesBlumenthalCfb256Protocol = "aes256Blumenthal"
     usmNoPrivProtocol = "none"
 
 

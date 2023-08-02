@@ -71,7 +71,7 @@ influxdb:
       bucket: snmptraps
 ```
 
-`Configure the Default Trap Processing Options:'
+\`Configure the Default Trap Processing Options:'
 The *default_mapping* section defines how all of the traps will be processed. All traps will be exported to the same influxDB *measurement*, as configured in this section.
 
 ```yaml
@@ -164,13 +164,13 @@ custom_mappings:
 
 ```log
 name: link
-time                host_ip  host_name ifAdminStatus ifIndex ifName   ifOperStatus   snmpTrapOID      
-----                -------  --------- ------------- ------- ------   ------------   -----------      
-1567595151560645019 10.0.0.1 PE1       testing       528     ge-0/0/2 up             IF-MIB::linkUp   
-1567595133817560582 10.0.0.1 PE1       testing       527     ge-0/0/1 down           IF-MIB::linkDown 
-1567526318214027243 10.0.0.1 PE1       testing       529     ge-0/0/3 lowerLayerDown IF-MIB::linkDown 
-1567526311842142467 10.0.0.1 PE1       testing       528     ge-0/0/2 lowerLayerDown IF-MIB::linkDown 
-1567526246944423884 10.0.0.1 PE1       testing       528     ge-0/0/2 lowerLayerDown IF-MIB::linkDown 
+time                host_ip  host_name ifAdminStatus ifIndex ifName   ifOperStatus   snmpTrapOID
+----                -------  --------- ------------- ------- ------   ------------   -----------
+1567595151560645019 10.0.0.1 PE1       testing       528     ge-0/0/2 up             IF-MIB::linkUp
+1567595133817560582 10.0.0.1 PE1       testing       527     ge-0/0/1 down           IF-MIB::linkDown
+1567526318214027243 10.0.0.1 PE1       testing       529     ge-0/0/3 lowerLayerDown IF-MIB::linkDown
+1567526311842142467 10.0.0.1 PE1       testing       528     ge-0/0/2 lowerLayerDown IF-MIB::linkDown
+1567526246944423884 10.0.0.1 PE1       testing       528     ge-0/0/2 lowerLayerDown IF-MIB::linkDown
 ```
 
 ### 5. Run container usind docker-compose
