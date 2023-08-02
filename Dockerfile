@@ -1,6 +1,9 @@
 FROM python:3.11-alpine3.18
 LABEL maintainer="Steve Brown https://github.com/audiocomp"
 
+# Update SSL
+RUN apk update && apk upgrade openssl
+
 # Install Required Packages
 COPY requirements.txt  /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
