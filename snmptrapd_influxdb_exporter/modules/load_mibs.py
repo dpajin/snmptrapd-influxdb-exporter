@@ -6,7 +6,7 @@ from pysnmp.smi import builder, compiler, view
 from pysnmp.smi.error import MibNotFoundError
 
 mib_path: str = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "mibs"
+    os.path.dirname(os.path.realpath("__file__")), "mibs"
 )
 mib_list: List[str] = snmp_config.mib_list
 
