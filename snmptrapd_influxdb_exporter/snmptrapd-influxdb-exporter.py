@@ -117,11 +117,11 @@ def snmp_engine():
     try:
         log.error("Trap Receiver started on port 162. Press Ctrl-c to quit.")
         snmpEngine.transportDispatcher.runDispatcher()
+        ntfrcv.NotificationReceiver(snmpEngine, cbFun)
     except KeyboardInterrupt:
         log.error("Ctrl-c Pressed. Trap Receiver Stopped")
     finally:
         snmpEngine.transportDispatcher.closeDispatcher()
-    ntfrcv.NotificationReceiver(snmpEngine, cbFun)
 
 
 def main():

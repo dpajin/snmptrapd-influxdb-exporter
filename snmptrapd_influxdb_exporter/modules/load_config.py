@@ -18,7 +18,6 @@ console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(formatter)
 log.addHandler(console_handler)
 log.setLevel(40)
-log.propagate = False
 
 snmp_config: Optional[Config] = None
 try:
