@@ -92,18 +92,16 @@ def snmp_engine():
                 ).resolveWithMib(mibViewController)
             )
             if "sysUpTime" in varBind:
-                message["uptime"] = varBind.split("=")[1].strip()
+                message["uptime"] = varBind.split(" = ")[1].strip()
             elif "snmpTrapOID" in varBind:
                 if message["oid"] is None:
-                    message["oid"] = varBind.split("=")[1].strip()
+                    message["oid"] = varBind.split(" = ")[1].strip()
             else:
-                message["varbinds"].append(
-                    varBind.replace(" =", "=").replace("= ", "=")
-                )
-                if len(varBind.split("=")) > 1:
+                message["varbinds"].append(varBind)
+                if len(varBind.split(" = ")) > 1:
                     message["varbinds_dict"][
-                        varBind.split("=")[0].strip()
-                    ] = varBind.split("=")[1].strip()
+                        varBind.split(" = ")[0].strip()
+                    ] = varBind.split(" = ")[1].strip()
         log.info(
             f"Trap From: {tAddress}, EngineId {contextEngineId.prettyPrint()}"
         )
