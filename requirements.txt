@@ -1,6 +1,6 @@
 aiohttp==3.8.5
 aiohttp-retry==2.8.3
 influxdb-client==1.37.0
-pydantic==2.1.1
-pysnmp-lextudio==5.0.28
+pydantic==2.3.0
+pysnmp-lextudio==5.0.29
 PyYAML==6.0.1
