@@ -7,6 +7,13 @@ import yaml  # type: ignore
 from models.config import Config
 
 FILENAME: str = "config.yaml"
+log_map = {
+    "CRITICAL": 50,
+    "ERROR": 40,
+    "WARNING": 30,
+    "INFO": 20,
+    "DEBUG": 10
+}
 
 # Configure Logging
 log = logging.getLogger("snmptrapd-influxdb-exporter")
@@ -41,9 +48,8 @@ else:
     log.error("Unable to Validate Config File")
 
 if snmp_config is not None:
-    log_level = snmp_config.logging
+    log_level = snmp_config.logging.value
     if log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-        level = logging.getLevelName(log_level)
-        log.setLevel(log_level)
+        log.setLevel(int(log_map[log_level]))
 
 log.debug(f"Processed snmp_conifg: {snmp_config}")
