@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 
 from aiohttp.client_exceptions import ClientError
 from aiohttp_retry import ExponentialRetry, RetryClient
+from asyncio.exceptions import TimeoutError
 from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 from modules.load_config import log, snmp_config
 
@@ -12,7 +13,9 @@ async def write_datapoints(datapoints: List[Dict[str, Any]]):
         dbclients = []
         buckets = []
         retry_options = ExponentialRetry(
-            attempts=5, start_timeout=5.0, exceptions={ClientError}
+            attempts=5,
+            start_timeout=5.0,
+            exceptions=[ClientError, TimeoutError]
         )
         for server in snmp_config.influxdb.server:
             dbclient = InfluxDBClientAsync(
@@ -34,3 +37,5 @@ async def write_datapoints(datapoints: List[Dict[str, Any]]):
                         await write_api.write(bucket=bucket, record=datapoints)
                     except ClientError as e:
                         log.error(f"HTTP Error writing to influx: {e}")
+                    except TimeoutError as e:
+                        log.error(f"AsyncIo Error writing to influx: {e}")
